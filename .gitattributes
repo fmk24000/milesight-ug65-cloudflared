@@ -1,0 +1,9 @@
+# Shell scripts run on the gateway via busybox sh — they must keep LF endings.
+*.sh text eol=lf
+verify.sh text eol=lf
+
+# Everything else normalises to LF too (the gateway and CI are Linux).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary

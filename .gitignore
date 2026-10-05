@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Local runtime artefacts — never commit these
+snapshots/
+tunnel.token
+flows.json
+ug65.cookies
+*.log
+
+# cloudflared binary (37 MB). sub_install.py downloads it on first run.
+ug65-sub-cloudflared/bin/cloudflared-linux-arm64
