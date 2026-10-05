@@ -115,8 +115,8 @@ python deploy.py --host <GATEWAY_IP> --password '<ADMIN_PW>' --token '<TOKEN>' \
 
 ## 人手 fallback（deploy.py 失敗時）
 
-逐步做，每一步都有驗證點。完整版連 curl 命令見下面第 5 步；以下係逐步嘅
-raw `curl` 版本。
+逐步做，每一步都有驗證點。以下係逐步嘅 raw `curl` 版本；完整教學（連每步嘅驗收輸出、
+常見問題排查同死路表）見 https://github.com/fmk24000/milesight-ug65-cloudflared/blob/main/docs/manual-deployment.zh-HK.md。
 
 ```bash
 # 1. 登入（密碼加密：AES-128-CBC, key=1111111111111111, iv=2222222222222222, PKCS7, base64）

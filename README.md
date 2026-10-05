@@ -1,5 +1,7 @@
 # Milesight UG65 × Cloudflare Tunnel
 
+**English** | [中文（廣東話）](README.zh-HK.md)
+
 Two reusable agent skills that put a **Milesight UG65 / UG56 / UG67 LoRaWAN gateway**
 on the internet through **Cloudflare Tunnel (`cloudflared`)** using **nothing but the
 admin account**.
@@ -15,6 +17,10 @@ no Docker, no port forwarding, no fixed IP.
 Both were developed and verified against real hardware — UG65 ×2, firmware
 `60.0.0.49-r3` (controller) / `60.0.0.48-r3` (sub), `cloudflared 2026.9.1`, mosquitto mTLS,
 including full **power-cycle tests**.
+
+> 📖 Want the step-by-step manual version, with raw `curl` commands, per-step verification
+> points and the dead-end list? See
+> **[`docs/manual-deployment.zh-HK.md`](docs/manual-deployment.zh-HK.md)** (Chinese).
 
 ---
 
@@ -277,8 +283,11 @@ These were all tested and do not work on this firmware:
 ```
 .
 ├── README.md
+├── README.zh-HK.md               Chinese (Cantonese) version of this file
 ├── LICENSE                       MIT
 ├── .gitignore
+├── docs/
+│   └── manual-deployment.zh-HK.md  full step-by-step manual (raw curl, checkpoints, dead ends)
 ├── ug65-cloudflared/
 │   ├── SKILL.md                  full skill instructions (Chinese, with all field notes)
 │   └── scripts/
