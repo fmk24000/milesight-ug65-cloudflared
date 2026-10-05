@@ -39,7 +39,7 @@ whenToUse: 當用戶提供 Cloudflare Tunnel Token，並要求喺 Milesight UG65
 
 **唔需要**：root 密碼、拆機、白包 firmware、Docker、router、fixed IP。
 
-> **本 repo 用戶偏好（見 `AGENTS.md`）**：Milesight gateway 嘅 **SSH 要長期開住**
+> **預設做法**：Milesight gateway 嘅 **SSH 要長期開住**（唔係做完就關），
 > （唔係做完就關），所以標準做法係一齊落 `--enable-ssh --ssh-lan <CIDR>`。
 
 ## 核心原理（唔好質疑，已經實測過）
@@ -111,12 +111,12 @@ python deploy.py --host <GATEWAY_IP> --password '<ADMIN_PW>' --token '<TOKEN>' \
    冇加嘅話 gateway 管理頁會裸露上網。
 3. **輪換 Tunnel Token** —— token 一旦出現喺對話／檔案就有外洩風險。
 
-> ⚠️ **唔好**叫用戶「維護完就關返 SSH」——本 repo 用戶偏好 SSH 長期開住（見 `AGENTS.md`）。
+> ⚠️ **唔好**叫用戶「維護完就關返 SSH」——呢類 gateway 慣常要長期開住 SSH 方便維護。
 
 ## 人手 fallback（deploy.py 失敗時）
 
-逐步做，每一步都有驗證點。完整版連 curl 命令見
-`UG65/手動部署教學.md`（在這個 repo 的 workspace 內）。
+逐步做，每一步都有驗證點。完整版連 curl 命令見下面第 5 步；以下係逐步嘅
+raw `curl` 版本。
 
 ```bash
 # 1. 登入（密碼加密：AES-128-CBC, key=1111111111111111, iv=2222222222222222, PKCS7, base64）
@@ -266,7 +266,7 @@ iptables -I INPUT 2 -p tcp -s 192.168.68.0/24 --dport 22 -j ACCEPT
 ```
 
 - 要**持久**就唔可以只落 cron（見下一點）：用開機 init script `START=20`（firewall 係 S19）＋
-  procd 常駐 loop。本 repo 已放 `UG65/SSH-開通與保活加固-2026-09-16.md` 同腳本。
+  procd 常駐 loop（即 `--enable-ssh --ssh-lan <CIDR>` 落嘅嘢）。
 - `/etc/init.d/firewall` 自己本身有寫住一條 `--dport 22 --source 192.168.0.0/16 -j ACCEPT`，
   但**佢冇設 `LD_LIBRARY_PATH`，所以開機時根本加唔到** —— 呢個係原廠嘅 bug。
 
