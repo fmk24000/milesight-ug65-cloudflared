@@ -12,7 +12,7 @@ no Docker, no port forwarding, no fixed IP.
 | Skill | What it does |
 |---|---|
 | [`ug65-cloudflared`](ug65-cloudflared/SKILL.md) | Installs `cloudflared` **on the gateway itself**, so the gateway (and its web UI, Node-RED, whatever you route) is reachable at your own domain even when it sits behind a mobile SIM with no public IP. Persistent across power cycles, with a `procd` keepalive because **cron is unreliable on this firmware**. Optionally enables SSH in the same run and verifies everything — even when SSH is unavailable. |
-| [`ug65-sub-cloudflared`](ug65-sub-cloudflared/SKILL.md) | Turns a **sub gateway** into a Gateway Fleet agent that ships its LoRa packets to a controller gateway over native MQTT. Installs `cloudflared access tcp` as a *client-side* tunnel proxy on the sub gateway (the Cloudflare connector stays on the controller), pins a **non-loopback** address on `lo` because the firmware treats a loopback server address as local mode, and repoints the packet forwarder at it. |
+| [`ug65-sub-cloudflared`](ug65-sub-cloudflared/SKILL.md) | Two independent things on a **sub gateway**. **Part A** — *no token needed*: turns it into a Gateway Fleet agent that ships its LoRa packets to a controller gateway over native MQTT. Installs `cloudflared access tcp` as a *client-side* tunnel proxy (the Cloudflare connector stays on the controller), pins a **non-loopback** address on `lo` because the firmware treats a loopback server address as local mode, and repoints the packet forwarder at it. **Part B** — *needs the sub's own tunnel token*: gives the sub its own full connector (`cloudflared tunnel run`) with its own Public Hostname, so the sub is reachable from the internet directly. Both can run on the same device at once. |
 
 Both were developed and verified against real hardware — UG65 ×2, firmware
 `60.0.0.49-r3` (controller) / `60.0.0.48-r3` (sub), `cloudflared 2026.9.1`, mosquitto mTLS,
@@ -132,10 +132,12 @@ ps: /usr/bin/cloudflared --no-autoupdate tunnel run       and NO token in the pr
 
 ---
 
-## Skill 2 — sub gateway as a Gateway Fleet agent
+## Skill 2 — sub gateway (Part A: Fleet agent · Part B: its own tunnel)
 
 You only need three things: the sub gateway IP(s), a tunnel hostname on the controller, and
 the admin password.
+
+### Part A — the sub as a Gateway Fleet agent (no token)
 
 ```bash
 cd ug65-sub-cloudflared/scripts
@@ -192,6 +194,50 @@ Add a Public Hostname to the controller's tunnel (Zero Trust → Networks → Tu
 Then register the sub gateway in the Network Server (Gateways → Add, using the sub
 gateway's `gateway_id`), or let `--register` do it over the HTTP API.
 
+### Part B — the sub's own tunnel connector (needs its own token)
+
+Use this only when you want to reach the **sub itself** from the internet at its own hostname.
+Gateway Fleet does not need it.
+
+```bash
+cd ug65-sub-cloudflared/scripts
+
+# 1) validate the token only — touches no hardware. Run this the moment a new token arrives.
+python sub_connector.py --check-token --token '<SUB_TUNNEL_TOKEN>'
+
+# 2) install (drives ug65-cloudflared/scripts/deploy.py under the hood)
+python sub_connector.py --hosts 192.168.68.109 --password '<ADMIN_PASSWORD>' \
+       --token '<SUB_TUNNEL_TOKEN>' --enable-ssh --ssh-lan 192.168.68.0/24 \
+       --main 01-xxx.example.com
+
+# 3) read-only status check (exits 3 if the gateway is unreachable)
+python sub_connector.py --verify-only --hosts 192.168.68.109 --password '<ADMIN_PASSWORD>' \
+       --main 01-xxx.example.com
+```
+
+| Flag | Effect |
+|---|---|
+| `--token` | **The sub's own** tunnel token. Required for install; the script refuses to guess. |
+| `--check-token` | Decode the token, print account/tunnel id, refuse if it collides with the controller's. |
+| `--keep-nodered` | Don't restore Node-RED afterwards (it is restored by default — saves ~90 MB). |
+| `--skip-mqtt-check` | Skip the before/after MQTT destination comparison. |
+| `--wait` | Seconds to wait for the install (default `100`). |
+
+**The token rule.** A sub gateway needs a tunnel of its **own**: Zero Trust → Networks →
+Tunnels → *Create a tunnel*. Never reuse the controller's token — two different tunnels on
+the same Cloudflare account share only the account id, and copying one over the other makes
+the sub fail to register. `sub_connector.py` enforces this:
+
+- no `--token` → prints what to ask the user for and **exits 2** (it never falls back to a
+  stale value from a file or an earlier session);
+- a token that matches the controller's → **exits 2** and prints the controller's tunnel id;
+- otherwise it prints the account and tunnel id and states plainly that they differ.
+
+`sub_connector.py` is a wrapper: it gates the token, records the MQTT destination baseline and
+the original Node-RED state, calls `deploy.py`, then **restores Node-RED** (`deploy.py`'s own
+cleanup leaves it running), re-reads destinations + Fleet, and exits 3 unless both the web GUI
+and SSH are reachable.
+
 ---
 
 ## The two mistakes everyone makes
@@ -242,6 +288,9 @@ exposed on the LAN.
 | Added cron lines vanish after reboot | Milesight rewrites `/etc/crontabs/root` | Use a `procd` resident loop (`cfkeepalive`), not cron. |
 | Node-RED `exec` node never returns / HTTP times out | `oldrc: false` is unreliable on this firmware | Set `"oldrc": true`; avoid `addpay` and `useSpawn: true`. |
 | `CookieConflictError: multiple cookies named 'td'` (fw `60.0.0.48-r3`) | Login reply has no `td` in `result[0]` | Already fixed — `login()` falls back to `Set-Cookie`. |
+| The sub's hostname returns **HTTP 530** | Cloudflare can't find the origin — the sub's connector isn't up (off, left the site, not online yet); it is not a routing mistake | Check the sub: the `procd` service is running and the log shows 4 `Registered tunnel connection` lines. |
+| `ps` shows a truncated `cloudflared` cmdline on the sub | `ps` truncates the hostname | Read `/proc/<pid>/cmdline` (`tr '\0' ' '`) — the only reliable way to tell `access tcp` from `tunnel run`. |
+| Worried that installing Part B broke MQTT | Measured before and after: **no causal link** | The connector writes only cloudflared files — never `general_conf.servs`, never `lora-gateway-bridge.toml`. |
 
 ### Dead ends — don't waste your time
 
@@ -300,7 +349,9 @@ These were all tested and do not work on this firmware:
     ├── SKILL.md                  full skill instructions (Chinese, with all field notes)
     ├── bin/README.md             how to obtain the cloudflared arm64 binary
     └── scripts/
-        ├── sub_install.py        deploy / verify / revert (main entry point)
+        ├── sub_install.py        Part A — deploy / verify / revert (main entry point)
+        ├── sub_connector.py      Part B — the sub's own tunnel connector + token gate
+        ├── fleet_status.py       read the controller's Fleet connected / lastSeen
         ├── sub_reboot_test.py    reboot the sub gateway and re-verify end to end
         ├── rootctl.py            temporary root shell via a Node-RED exec node
         └── ug65_lib.py           web GUI login, /cgi RPC, file upload, password AES

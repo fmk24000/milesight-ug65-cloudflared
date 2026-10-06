@@ -11,7 +11,7 @@
 | Skill | 做啲咩 |
 |---|---|
 | [`ug65-cloudflared`](ug65-cloudflared/SKILL.md) | 直接**喺 gateway 本身**裝 `cloudflared`，之後 gateway（同佢嘅 web UI、Node-RED、你想 route 出去嘅任何嘢）就可以用你自己嘅域名入到，即使佢係插住流動 SIM、冇 public IP。斷電重開都仲喺度；保活用 `procd`，因為**呢個 firmware 嘅 cron 唔可靠**。可以同一次順手開埋 SSH，而且連 SSH 用唔到嘅情況下都做得到驗收。 |
-| [`ug65-sub-cloudflared`](ug65-sub-cloudflared/SKILL.md) | 將**副 gateway** 變成 Gateway Fleet agent，透過原生 MQTT 將 LoRa 封包送去主控 gateway。喺副 gateway 裝 `cloudflared access tcp` 做**客戶端** tunnel proxy（Cloudflare connector 仍然留喺主控），並喺 `lo` 上面釘一個**非 loopback** 地址 —— 因為 firmware 見到 loopback server address 就會當你係 local mode —— 再將 packet forwarder 指過去。 |
+| [`ug65-sub-cloudflared`](ug65-sub-cloudflared/SKILL.md) | 喺**副 gateway** 上面做兩件**互相獨立**嘅事。**Part A**（**唔要 token**）：將佢變成 Gateway Fleet agent，透過原生 MQTT 將 LoRa 封包送去主控 gateway —— 喺副 gateway 裝 `cloudflared access tcp` 做*客戶端* tunnel proxy（Cloudflare connector 仍然留喺主控），並喺 `lo` 上面釘一個**非 loopback** 地址（因為 firmware 見到 loopback server address 就當你係 local mode），再將 packet forwarder 指過去。**Part B**（**要副機自己嘅 tunnel token**）：幫副機開一條屬於佢自己嘅完整 connector（`cloudflared tunnel run`），配自己嘅 Public Hostname，變成可以喺互聯網直接開到。兩者可以喺同一部機同時跑。 |
 
 兩個 skill 都係喺真機上面開發同驗證：UG65 ×2、firmware `60.0.0.49-r3`（主控）／
 `60.0.0.48-r3`（副機）、`cloudflared 2026.9.1`、mosquitto mTLS，包括完整嘅**斷電重開測試**。
@@ -127,9 +127,11 @@ ps: /usr/bin/cloudflared --no-autoupdate tunnel run       and NO token in the pr
 
 ---
 
-## Skill 2 —— 將副 gateway 變成 Gateway Fleet agent
+## Skill 2 —— 副 gateway（Part A：Fleet agent · Part B：自己一條 tunnel）
 
 你只需要三樣嘢：副 gateway 嘅 IP（可以多過一部）、主控上面嘅 tunnel hostname、同 admin 密碼。
+
+### Part A —— 副機做 Gateway Fleet agent（唔要 token）
 
 ```bash
 cd ug65-sub-cloudflared/scripts
@@ -185,6 +187,46 @@ python sub_reboot_test.py --hosts 192.168.68.110 --password '<ADMIN_PASSWORD>' -
 之後喺 Network Server 註冊部副 gateway（Gateways → Add，用副 gateway 嘅 `gateway_id`），
 或者直接叫 `--register` 經 HTTP API 幫你做。
 
+### Part B —— 副機自己嘅 tunnel connector（要自己嘅 token）
+
+只有當你想**由互聯網直接打副機自己嘅 hostname** 先用得着。純粹為咗 Gateway Fleet 唔需要。
+
+```bash
+cd ug65-sub-cloudflared/scripts
+
+# 1) 淨係驗 token（唔碰任何機；新 token 一交嚟就先跑呢句）
+python sub_connector.py --check-token --token '<子機 TOKEN>'
+
+# 2) 裝（底層會叫 ug65-cloudflared/scripts/deploy.py 落手）
+python sub_connector.py --hosts 192.168.68.109 --password '<ADMIN_PASSWORD>' \
+       --token '<子機 TOKEN>' --enable-ssh --ssh-lan 192.168.68.0/24 \
+       --main 01-xxx.example.com
+
+# 3) 唯讀狀態核對（機連唔到會 exit 3）
+python sub_connector.py --verify-only --hosts 192.168.68.109 --password '<ADMIN_PASSWORD>' \
+       --main 01-xxx.example.com
+```
+
+| 參數 | 作用 |
+|---|---|
+| `--token` | **副機自己嗰條** tunnel 嘅 token。裝機必填；腳本唔會偷偷估。 |
+| `--check-token` | 解 token、印 account／tunnel id；同主控撞就拒絕。 |
+| `--keep-nodered` | 裝完**唔還原** Node-RED（預設會還原 —— 慳返約 90 MB）。 |
+| `--skip-mqtt-check` | 跳過 MQTT destination 前後對照。 |
+| `--wait` | 等安裝完成嘅秒數（預設 `100`）。 |
+
+**Token 硬規矩。** 副機要**自己一條** tunnel：Zero Trust → Networks → Tunnels →
+*Create a tunnel*。**千萬唔好照抄主控嗰條** —— 同一個 Cloudflare account 上面兩條 tunnel
+只係共用 account id，抄過去會令副機註冊唔到。`sub_connector.py` 幫你攔死：
+
+- 冇 `--token` → 印出「要問用戶攞咩」清單並 **exit 2**（絕對唔會退而求其次用檔案或者上一次嘅舊值）；
+- token 撞主控嗰條 → **exit 2**，同時印出主控嘅 tunnel id；
+- 正常 → 印 account 同 tunnel id，並明示兩者唔同。
+
+`sub_connector.py` 係個 wrapper：先過 token 關，再讀安裝前嘅 MQTT destination baseline 同
+Node-RED 原本狀態，跟住叫 `deploy.py`，之後**還原 Node-RED**（因為 `deploy.py` 自己嘅收尾會
+將佢留返開住），最後重新讀 destination 同 Fleet —— web GUI 同 SSH 兩者都唔通就 exit 3。
+
 ---
 
 ## 人人都會踩嘅兩個坑
@@ -233,6 +275,9 @@ firmware 就係用 loopback 嚟判斷「本地 vs 遠端」內嵌 NS：
 | 加咗嘅 cron 行重開後消失 | Milesight 會重寫 `/etc/crontabs/root` | 改用 `procd` 常駐 loop（`cfkeepalive`），唔好用 cron。 |
 | Node-RED `exec` node 唔返嘢／HTTP timeout | `oldrc: false` 喺呢個 firmware 唔可靠 | 設 `"oldrc": true`；避免用 `addpay` 同 `useSpawn: true`。 |
 | `CookieConflictError: multiple cookies named 'td'`（fw `60.0.0.48-r3`） | 登入回應嘅 `result[0]` 冇 `td` | 已修好 —— `login()` 會 fallback 去 `Set-Cookie`。 |
+| 副機 hostname 返 **HTTP 530** | Cloudflare 話 origin 唔喺度 —— 即係副機嘅 connector 唔喺度（熄咗機／離開咗現場／未上線），**唔係** route 錯 | 查副機：`procd` 服務有冇跑、log 有冇 4 條 `Registered tunnel connection`。 |
+| `ps` 睇到副機 `cloudflared` cmdline 被截斷 | `ps` 會截斷 hostname | 讀 `/proc/<pid>/cmdline`（`tr '\0' ' '`）—— 呢個係唯一可靠分辨 `access tcp` 同 `tunnel run` 嘅方法。 |
+| 驚裝 Part B 會搞爛 MQTT | 前後都實測過：**冇因果關係** | connector 只寫 cloudflared 嘅檔案 —— 由頭到尾冇碰 `general_conf.servs`，亦冇碰 `lora-gateway-bridge.toml`。 |
 
 ### 死路 —— 唔好嘥時間
 
@@ -289,7 +334,9 @@ firmware 就係用 loopback 嚟判斷「本地 vs 遠端」內嵌 NS：
     ├── SKILL.md                  完整 skill 指示（中文，含全部實測備註）
     ├── bin/README.md             點樣取得 cloudflared arm64 binary
     └── scripts/
-        ├── sub_install.py        部署／驗收／還原（主要入口）
+        ├── sub_install.py        Part A —— 部署／驗收／還原（主要入口）
+        ├── sub_connector.py      Part B —— 副機自己嘅 tunnel connector + token 攔截
+        ├── fleet_status.py       讀主控 Fleet 嘅 connected／lastSeen
         ├── sub_reboot_test.py    重開副 gateway 並由頭到尾重新驗收
         ├── rootctl.py            經 Node-RED exec node 攞臨時 root shell
         └── ug65_lib.py           Web GUI 登入、/cgi RPC、檔案上傳、密碼 AES
