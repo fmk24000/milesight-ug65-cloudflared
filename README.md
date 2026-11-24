@@ -21,6 +21,10 @@ including full **power-cycle tests**.
 > 📖 Want the step-by-step manual version, with raw `curl` commands, per-step verification
 > points and the dead-end list? See
 > **[`docs/manual-deployment.zh-HK.md`](docs/manual-deployment.zh-HK.md)** (Chinese).
+>
+> 🖼 Prefer a designed page you can read in a browser? Open
+> **[`docs/browser-manual.html`](docs/browser-manual.html)** — one self-contained file (fonts
+> embedded, works offline), with three diagrams. Source lives in `docs/manual-src/`.
 
 ---
 
@@ -336,7 +340,9 @@ These were all tested and do not work on this firmware:
 ├── LICENSE                       MIT
 ├── .gitignore
 ├── docs/
-│   └── manual-deployment.zh-HK.md  full step-by-step manual (raw curl, checkpoints, dead ends)
+│   ├── manual-deployment.zh-HK.md  full step-by-step manual (raw curl, checkpoints, dead ends)
+│   ├── browser-manual.html         the same manual as a self-contained designed page
+│   └── manual-src/                 markdown + inline SVG sources + build scripts
 ├── ug65-cloudflared/
 │   ├── SKILL.md                  full skill instructions (Chinese, with all field notes)
 │   └── scripts/

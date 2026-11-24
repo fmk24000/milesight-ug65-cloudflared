@@ -1,0 +1,57 @@
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="開機時序：0 秒開機，START 19 至 96，71 秒通 443，107 秒通 22">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+    .sm { fill: currentColor; font-size: 12.5px; opacity: .62; }
+    .axis { stroke: currentColor; stroke-width: 1.6; opacity: .5; }
+    .tick { stroke: currentColor; stroke-width: 1.2; opacity: .38; }
+    .wira { stroke: var(--accent); stroke-width: 2.4; fill: none; }
+    .bar { fill: var(--paper-2); }
+    .acc { fill: var(--accent); }
+  </style>
+  <defs>
+    <marker id="t-acc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" style="fill: var(--accent)"/>
+    </marker>
+  </defs>
+
+  <!-- axis 0..120s -> x 60..660 -->
+  <line class="axis" x1="60" y1="176" x2="680" y2="176"/>
+
+  <!-- 註冊區間 60-70s -->
+  <rect class="bar" x="358" y="152" width="52" height="24" rx="2"/>
+  <text class="sm" x="364" y="169">60–70s</text>
+
+  <!-- above ticks -->
+  <g>
+    <line class="tick" x1="60" y1="176" x2="60" y2="146"/>
+    <text class="mono" x="60" y="140" text-anchor="middle">0s</text>
+
+    <line class="tick" x1="157" y1="176" x2="157" y2="146"/>
+    <text class="mono" x="157" y="140" text-anchor="middle">19</text>
+
+    <line class="tick" x1="240" y1="176" x2="240" y2="146"/>
+    <text class="mono" x="240" y="140" text-anchor="middle">82</text>
+
+    <line class="tick" x1="312" y1="176" x2="312" y2="146"/>
+    <text class="mono" x="312" y="140" text-anchor="middle">95</text>
+
+    <line class="tick" x1="332" y1="176" x2="332" y2="146"/>
+    <text class="mono" x="332" y="140" text-anchor="middle">96</text>
+  </g>
+
+  <!-- milestones -->
+  <line class="wira" x1="60" y1="176" x2="412" y2="176" marker-end="url(#t-acc)"/>
+  <line class="tick" x1="415" y1="152" x2="415" y2="198"/>
+  <text class="mono acc" x="415" y="124" text-anchor="middle">71s</text>
+  <text class="sm" x="415" y="108" text-anchor="middle">443 通</text>
+
+  <line class="wira" x1="415" y1="176" x2="596" y2="176" marker-end="url(#t-acc)"/>
+  <line class="tick" x1="595" y1="152" x2="595" y2="198"/>
+  <text class="mono acc" x="595" y="124" text-anchor="middle">107s</text>
+  <text class="sm" x="595" y="108" text-anchor="middle">22 通</text>
+
+  <!-- 圖例 -->
+  <text class="sm" x="60" y="226">橫軸上面嘅數字係 procd 嘅 START：19 firewall　82 node-red　95 cloudflared　96 keepalive。</text>
+  <text class="sm" x="60" y="248">60–70 秒之間 cloudflared 完成註冊；早過呢個時間開 domain 見到 502 係正常。</text>
+  <text class="sm" x="60" y="270">重試幾次先成功係正常 —— log 有多次 Starting tunnel 唔代表設定錯。</text>
+</svg>

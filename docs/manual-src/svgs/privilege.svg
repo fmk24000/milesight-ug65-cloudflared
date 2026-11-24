@@ -1,0 +1,87 @@
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="提權路線：admin 帳號六條路都行唔通，只有 Node-RED exec node 以 root 執行">
+  <style>
+    .hl { fill: currentColor; font-size: 19px; font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+    .sm { fill: currentColor; font-size: 12.5px; opacity: .62; }
+    .box { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }
+    .boxa { fill: none; stroke: var(--accent); stroke-width: 2; }
+    .dead { fill: none; stroke: var(--line); stroke-width: 1.2; }
+    .x { stroke: currentColor; stroke-width: 1.4; opacity: .4; }
+    .wira { stroke: var(--accent); stroke-width: 2.4; fill: none; }
+    .acc { fill: var(--accent); }
+  </style>
+  <defs>
+    <marker id="p-acc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" style="fill: var(--accent)"/>
+    </marker>
+  </defs>
+
+  <!-- admin -->
+  <rect class="box" x="24" y="72" width="212" height="34" rx="3"/>
+  <text class="mono" x="38" y="95">admin · uid 6833</text>
+
+  <!-- dead ends -->
+  <g>
+    <rect class="dead" x="24" y="124" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="143">su -</text>
+    <line class="x" x1="30" y1="128" x2="230" y2="148"/>
+    <line class="x" x1="230" y1="128" x2="30" y2="148"/>
+
+    <rect class="dead" x="24" y="160" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="179">getty-bk setuid</text>
+    <line class="x" x1="30" y1="164" x2="230" y2="184"/>
+    <line class="x" x1="230" y1="164" x2="30" y2="184"/>
+
+    <rect class="dead" x="24" y="196" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="215">busybox SUID</text>
+    <line class="x" x1="30" y1="200" x2="230" y2="220"/>
+    <line class="x" x1="230" y1="200" x2="30" y2="220"/>
+
+    <rect class="dead" x="24" y="232" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="251">cron / rc.local</text>
+    <line class="x" x1="30" y1="236" x2="230" y2="256"/>
+    <line class="x" x1="230" y1="236" x2="30" y2="256"/>
+
+    <rect class="dead" x="24" y="268" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="287">Docker / supervisord</text>
+    <line class="x" x1="30" y1="272" x2="230" y2="292"/>
+    <line class="x" x1="230" y1="272" x2="30" y2="292"/>
+
+    <rect class="dead" x="24" y="304" width="212" height="28" rx="2"/>
+    <text class="mono" x="38" y="323">爆 root hash</text>
+    <line class="x" x1="30" y1="308" x2="230" y2="328"/>
+    <line class="x" x1="230" y1="308" x2="30" y2="328"/>
+  </g>
+
+  <!-- 全部唔得 -->
+  <text class="sm" x="24" y="352">六條路都實測失敗</text>
+
+  <!-- Node-RED -->
+  <line class="wire" x1="236" y1="89" x2="286" y2="89"/>
+  <rect class="boxa" x="286" y="58" width="196" height="116" rx="3"/>
+  <text class="hl" x="302" y="86">Node-RED</text>
+  <text class="sm" x="302" y="106">由 procd 以 root 啟動</text>
+  <text class="mono acc" x="302" y="132">exec node</text>
+  <text class="sm" x="302" y="152">實測 id → uid=0</text>
+
+  <!-- root -->
+  <line class="wira" x1="482" y1="116" x2="534" y2="116" marker-end="url(#p-acc)"/>
+  <rect class="box" x="534" y="94" width="162" height="44" rx="3"/>
+  <text class="mono acc" x="550" y="122">uid = 0 (root)</text>
+
+  <!-- actions -->
+  <line class="wira" x1="615" y1="138" x2="615" y2="164" marker-end="url(#p-acc)"/>
+  <rect class="box" x="482" y="170" width="214" height="28" rx="2"/>
+  <text class="mono" x="496" y="189">寫 /etc/init.d/*</text>
+
+  <rect class="box" x="482" y="204" width="214" height="28" rx="2"/>
+  <text class="mono" x="496" y="223">binary + chmod 755</text>
+
+  <rect class="box" x="482" y="238" width="214" height="28" rx="2"/>
+  <text class="mono" x="496" y="257">procd enable / start</text>
+
+  <rect x="482" y="272" width="214" height="28" rx="2" style="fill:none; stroke: var(--accent); stroke-width: 1.6"/>
+  <text class="mono acc" x="496" y="291">清走臨時 root shell</text>
+
+  <text class="sm" x="482" y="352">唯一「非官方」嘅一步只係用 API 代替手㩒界面</text>
+</svg>

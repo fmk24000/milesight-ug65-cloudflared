@@ -18,6 +18,9 @@
 
 > 📖 想要逐個步驟嘅人手版本（連 raw `curl` 命令、每步驗證點、死路表）：
 > **[`docs/manual-deployment.zh-HK.md`](docs/manual-deployment.zh-HK.md)**
+>
+> 🖼 想睇排版好嘅版本？直接開 **[`docs/browser-manual.html`](docs/browser-manual.html)** ——
+> 單檔 HTML（字體已內嵌，離線都開得），有 3 張圖。原稿同 SVG 喺 `docs/manual-src/`。
 
 ---
 
@@ -321,7 +324,9 @@ firmware 就係用 loopback 嚟判斷「本地 vs 遠端」內嵌 NS：
 ├── LICENSE                       MIT
 ├── .gitignore
 ├── docs/
-│   └── manual-deployment.zh-HK.md  完整人手逐步教學（raw curl、驗證點、死路表）
+│   ├── manual-deployment.zh-HK.md  完整人手逐步教學（raw curl、驗證點、死路表）
+│   ├── browser-manual.html         同一份 manual 嘅排版版（單檔、可離線開）
+│   └── manual-src/                 markdown + SVG 原稿 + 建置腳本
 ├── ug65-cloudflared/
 │   ├── SKILL.md                  完整 skill 指示（中文，含全部實測備註）
 │   └── scripts/
