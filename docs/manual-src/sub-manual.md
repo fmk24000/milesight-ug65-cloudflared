@@ -10,6 +10,8 @@ status: verified
 
 實測環境：UG65 ×2、firmware `60.0.0.49-r3`（主機）／`60.0.0.48-r3`（子機）、cloudflared `2026.9.1`、mosquitto mTLS。
 
+本文嘅 hostname 用返實測環境嘅真域名（`chkaicloud.com`）做例子，你照自己嘅域名替換就得。
+
 > **Gateway Fleet**：Milesight Network Server 睇住一堆 gateway 嘅清單。子機要做「agent」，將自己收到嘅 LoRa 封包送去主機，主機喺 Fleet 度就會見到佢 `connected: true`。
 > **cloudflared access tcp**：**client 端**代理，唔係 connector。佢將本機一個 TCP port 反代去 `https://HOSTNAME`，令子機原廠 packet forwarder 以為自己連住一個普通 MQTT server。
 > **loopback 判別**：firmware 一見到 `serv_addr` 係 `127.0.0.1` / `localhost`，就當你要用「本地 Embedded NS」，封包永遠唔會出街。所以一定要用非 loopback 地址。
@@ -26,7 +28,7 @@ status: verified
 | **1. 子機 IP** | 可以多過一部，逗號分隔，例 `192.168.68.109,192.168.68.110`。順便問埋**主機 IP／hostname**，驗收要靠佢查 Fleet |
 | **2. Username** | 子機 Web GUI 帳號，多數 `admin` 但一樣要問 |
 | **3. Password** | 該帳號密碼，用單引號包住（常含 `$$`）。主機同子機密碼唔同就分別問 |
-| **4. Domain** | 主機 tunnel 上嘅 hostname，例 `mqtt-xxx.example.com`。**一定要一層域名** |
+| **4. Domain** | 主機 tunnel 上嘅 hostname，例 `mqtt-tmtp.chkaicloud.com`。**一定要一層域名** |
 | **5. 子機自己嘅 Token** | **只做 Part B 先要**。Cloudflare dashboard 為子機開一條新 tunnel 攞，唔可以抄主機 |
 
 **前置**：跑腳本嗰部電腦要**同子機同一個 LAN** —— 因為要經 HTTP 推一個約 37MB 嘅 cloudflared binary 落子機。
@@ -65,8 +67,8 @@ Zero Trust → Networks → Tunnels → 主機嗰條 tunnel → Public Hostname�
 
 | Order | Destination | Type | Service | Additional settings |
 |---|---|---|---|---|
-| 1 | `01-xxx.example.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
-| 2 | `mqtt-xxx.example.com` | Published application | `tcp://localhost:18883` | Using defaults |
+| 1 | `01-tmtp.chkaicloud.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
+| 2 | `mqtt-tmtp.chkaicloud.com` | Published application | `tcp://localhost:18883` | Using defaults |
 
 第 1 行係主機自己嘅 Web GUI（可選，方便你由外面開主機）；**第 2 行係子機要連嘅 MQTT route**，冇佢子機一定通唔到。
 
@@ -83,7 +85,7 @@ Zero Trust → Networks → Tunnels → 主機嗰條 tunnel → Public Hostname�
 cd ug65-sub-cloudflared/scripts
 
 python sub_install.py --hosts 192.168.68.110 \
-  --host mqtt-xxx.example.com \
+  --host mqtt-tmtp.chkaicloud.com \
   --password 'YOUR_ADMIN_PASSWORD' \
   --add-dest --register --gw-name Gateway_03 \
   --main 192.168.68.106
@@ -185,7 +187,7 @@ python sub_install.py --hosts 192.168.68.109 \
 
 ## Part B：幾時要做，同 token 規矩
 
-只有當你想**由互聯網直接打子機自己嘅 hostname**（例 `02-xxx.example.com`）開子機 Web GUI 先要做。
+只有當你想**由互聯網直接打子機自己嘅 hostname**（例 `02-tmtp.chkaicloud.com`）開子機 Web GUI 先要做。
 
 **硬規矩：token 要問用戶攞，而且一定係子機自己嗰條。**
 
@@ -215,13 +217,13 @@ python sub_connector.py --hosts 192.168.68.109 \
   --password 'YOUR_ADMIN_PASSWORD' \
   --token 'YOUR_SUB_TUNNEL_TOKEN' \
   --enable-ssh --ssh-lan 192.168.68.0/24 \
-  --main 01-xxx.example.com
+  --main 01-tmtp.chkaicloud.com
 
 # 3) 唯讀核對現狀，隨時跑得。機連唔到會 exit 3
 python sub_connector.py --verify-only \
   --hosts 192.168.68.109 \
   --password 'YOUR_ADMIN_PASSWORD' \
-  --main 01-xxx.example.com
+  --main 01-tmtp.chkaicloud.com
 ```
 
 其他參數：`--keep-nodered`（唔還原 Node-RED）、`--skip-mqtt-check`、`--user`（預設 `admin`）、`--wait`（預設 `100` 秒）。
@@ -242,7 +244,7 @@ python sub_connector.py --verify-only \
 |---|---|
 | 兩個進程 | `cloudflared access tcp`（Part A）同 `cloudflared tunnel run`（Part B）同時存在 |
 | 子機 log | `Starting tunnel tunnelID=` + 4 條 `Registered tunnel connection` 全 `protocol=quic` |
-| 外部 | 唔同網絡開 `https://02-xxx.example.com/` → 200 同 UG65 登入頁 |
+| 外部 | 唔同網絡開 `https://02-tmtp.chkaicloud.com/` → 200 同 UG65 登入頁 |
 | MQTT 前後一致 | `general_conf.servs` 冇改、`10.99.99.1:28883` 仲 LISTEN、Fleet 仍然 `connected` |
 | Node-RED | `node_red.enable=false`、`1880` 冇 listen、`/node-red/cfrun` 消失 |
 | SSH（如要） | `:22` LISTEN；唔想要就唔好加 `--enable-ssh` |
@@ -264,7 +266,7 @@ done
 |---|---|---|
 | Fleet 永遠 `connected: false` | `serv_addr` 填咗 `127.0.0.1` | 改用 `10.99.99.1`（本方案預設） |
 | `tls: handshake failure` + HTTP 502 | route 用咗 `http://` | 改 `tcp://localhost:18883` |
-| edge 冇 ServerHello | hostname 兩層 | 用一層 `mqtt-xxx.example.com` |
+| edge 冇 ServerHello | hostname 兩層 | 用一層 `mqtt-tmtp.chkaicloud.com` |
 | 子機登入回 `CookieConflictError` | fw `60.0.0.48-r3` 回應冇 `result[0].td` | 已修：`login()` 會由 `Set-Cookie` fallback |
 | 加咗嘅 cron 重開就冇 | Milesight 重寫 `/etc/crontabs/root` | 一律用 procd（`/etc/init.d/cfagent`） |
 | 子機 IP 係 DHCP 會變 | LAN ping 唔到、ARP 冇咗 | 用 hostname 做檢查；tunnel 係子機主動出去，換 IP 唔影響 |

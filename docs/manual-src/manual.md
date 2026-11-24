@@ -10,6 +10,8 @@ status: verified
 
 實測環境：UG65 ×1、firmware `60.0.0.49-r3`、cloudflared `2026.9.1`、已通過斷電重開測試（開機到 443 通 = 71 秒、22 通 = 107 秒）。
 
+本文嘅 hostname 用返實測環境嘅真域名（`chkaicloud.com`）做例子，你照自己嘅域名替換就得。
+
 > **Tunnel Token**：Cloudflare 側一條 tunnel 嘅憑證（`eyJ...` 開頭），喺 Zero Trust 只會顯示一次。有 token 就等於有條 tunnel 嘅車匙，唔好貼上網、唔好入 git。
 > **procd**：OpenWrt 嘅服務管理器。UG65 底層係 LEDE 17.01，所以可以用標準 init script 做開機自啟同 respawn —— 呢個 firmware 嘅 cron **唔可靠**，唔好用。
 > **臨時 root shell**：內建 Node-RED 由 procd 以 root 身分啟動，所以佢嘅 `exec` node 出嚟嘅 shell 就係 `uid=0(root)`。本文借佢做安裝同驗收，**做完一定清走**。
@@ -75,13 +77,13 @@ status: verified
 
 | 欄位 | 填乜 |
 |---|---|
-| Subdomain | `gw`（或你喜歡嘅） |
-| Domain | 你嘅域名 |
+| Subdomain | `01-tmtp` |
+| Domain | `chkaicloud.com` |
 | Type | `HTTPS` |
 | URL | `localhost:443` |
 | **No TLS Verify** | **一定要開** —— gateway 用自簽證書 |
 
-填完個 hostname 就係 `https://gw.example.com`。
+填完個 hostname 就係 `https://01-tmtp.chkaicloud.com`。
 
 ### 實測範例：一條 tunnel 掛兩個 hostname
 
@@ -89,16 +91,16 @@ status: verified
 
 | Order | Destination | Type | Service | Additional settings |
 |---|---|---|---|---|
-| 1 | `01-xxx.example.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
-| 2 | `mqtt-xxx.example.com` | Published application | `tcp://localhost:18883` | Using defaults |
+| 1 | `01-tmtp.chkaicloud.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
+| 2 | `mqtt-tmtp.chkaicloud.com` | Published application | `tcp://localhost:18883` | Using defaults |
 
 第 1 行係 gateway 自己嘅 Web GUI；第 2 行係子機 MQTT 上行用（見子機那份 manual）。**MQTT 一定要 `tcp://`**，寫 `http://localhost:18883` 會回 502。
 
 兩行都係同一條 tunnel、同一個 token —— 所以主機側只需要裝一次。
 
-第 5 步嘅 Access policy 咁設：Zero Trust → **Access → Applications → Add an application → Self-hosted**。Application domain 填 `gw.example.com`；Policy 揀 Action `Allow`、Include `Emails`、填你自己 email；Identity provider 用 **One-time PIN**（最快）或者 Google。
+第 5 步嘅 Access policy 咁設：Zero Trust → **Access → Applications → Add an application → Self-hosted**。Application domain 填 `01-tmtp.chkaicloud.com`；Policy 揀 Action `Allow`、Include `Emails`、填你自己 email；Identity provider 用 **One-time PIN**（最快）或者 Google。
 
-> ⚠️ 唔加 Access policy 嘅話，你部 gateway 嘅管理介面就等於對全世界開放。實測冇加，`https://gw.example.com` 會直接返回 UG65 登入頁。
+> ⚠️ 唔加 Access policy 嘅話，你部 gateway 嘅管理介面就等於對全世界開放。實測冇加，`https://01-tmtp.chkaicloud.com` 會直接返回 UG65 登入頁。
 
 ## 步驟二：登入 Web GUI API
 
@@ -373,7 +375,7 @@ INF Registered tunnel connection
 ```text
 INF Updated to new configuration
   config="{\"ingress\":[
-    {\"hostname\":\"gw.example.com\",
+    {\"hostname\":\"01-tmtp.chkaicloud.com\",
      \"originRequest\":{\"noTLSVerify\":true},
      \"service\":\"https://localhost:443\"}, ...]}"
 ```
@@ -383,7 +385,7 @@ INF Updated to new configuration
 由**唔同網絡**（例如手機 4G，唔好行返同一個 Wi-Fi）開：
 
 ```bash
-curl -skI 'https://gw.example.com' | head -5
+curl -skI 'https://01-tmtp.chkaicloud.com' | head -5
 # 應該見到 server: cloudflare 同 cf-ray: ...-HKG
 ```
 
@@ -673,6 +675,6 @@ rm -rf /etc/cloudflared
 - `ps` 見到 `cloudflared --no-autoupdate tunnel run`，而且**唔見到 token**
 - `ps` 見到 `cf-maintain-loop`
 - `/etc/urlog/system.log` 有 4 條 `Registered tunnel connection`、全 `protocol=quic`
-- 由手機 4G 開 `https://gw.example.com` 見到登入頁（或 Access 嘅 OTP）
+- 由手機 4G 開 `https://01-tmtp.chkaicloud.com` 見到登入頁（或 Access 嘅 OTP）
 - 斷電重開後 90 秒內自己連返
 - 臨時 root shell 已清走（`https://192.168.68.104:1880/node-red/cfrun` 回 404）
