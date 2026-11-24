@@ -1,0 +1,52 @@
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="loopback 陷阱對照：serv_addr 填 127.0.0.1 會被當成本地 Embedded NS，填 10.99.99.1 才會當成遠端">
+  <style>
+    .hl { fill: currentColor; font-size: 18px; font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .sm { fill: currentColor; font-size: 12px; opacity: .62; }
+    .box { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }
+    .boxa { fill: none; stroke: var(--accent); stroke-width: 2; }
+    .bad { fill: none; stroke: var(--line); stroke-width: 1.2; }
+    .beat { fill: currentColor; font-size: 15px; opacity: .35; }
+    .acc { fill: var(--accent); }
+    .mono-a { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+
+  <text class="sm" x="24" y="26">firmware 用「係唔係 loopback」嚟判斷你要連本地定遠端 —— 同一個位填唔同嘢，行為完全唔同。</text>
+
+  <!-- 左：127.0.0.1 -->
+  <rect class="bad" x="24" y="48" width="316" height="248" rx="3"/>
+  <text class="hl" x="42" y="78">serv_addr = 127.0.0.1</text>
+  <text class="sm" x="42" y="98">firmware 當成「本地 Embedded NS」</text>
+
+  <rect class="box" x="42" y="114" width="280" height="52" rx="2"/>
+  <text class="mono" x="54" y="136">server=</text>
+  <text class="mono" x="54" y="154">"tcp://127.0.0.1:1883"</text>
+
+  <text class="sm" x="42" y="192">封包只入子機自己嘅 mosquitto</text>
+  <text class="sm" x="42" y="210">永遠去唔到主機</text>
+
+  <text class="mono" x="42" y="248">Fleet: connected = false</text>
+  <text class="sm" x="42" y="268">（/tmp/pkt_fwd_type 只剩 ursalink 1）</text>
+
+  <!-- 中間 vs -->
+  <text class="beat" x="356" y="180">vs</text>
+
+  <!-- 右：10.99.99.1 -->
+  <rect class="boxa" x="380" y="48" width="316" height="248" rx="3"/>
+  <text class="hl" x="398" y="78">serv_addr = 10.99.99.1</text>
+  <text class="sm" x="398" y="98">firmware 當成「遠端 Embedded NS」</text>
+
+  <rect class="box" x="398" y="114" width="280" height="52" rx="2"/>
+  <text class="mono-a" x="410" y="136">server=</text>
+  <text class="mono-a acc" x="410" y="154">"ssl://10.99.99.1:28883"</text>
+
+  <text class="sm" x="398" y="192">+ ca_cert / tls_cert / tls_key</text>
+  <text class="sm" x="398" y="210">封包經 tunnel 出去主機</text>
+
+  <text class="mono acc" x="398" y="248">Fleet: connected = true</text>
+  <text class="sm" x="398" y="268">push_data_ack = 100.00%</text>
+
+  <text class="sm" x="24" y="322">10.99.99.1/32 掛喺 lo，但佢唔係 127.0.0.0/8 範圍，所以 firmware 當佢係「出面」嘅地址。</text>
+  <text class="sm" x="24" y="344">cloudflared 只綁 10.99.99.1:28883（唔綁 0.0.0.0），所以 LAN 上唔會多咗個 listener。</text>
+  <text class="sm" x="24" y="366">呢個位一填錯，之後點驗都係 connected: false —— 而且唔會有任何 error message。</text>
+</svg>

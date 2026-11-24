@@ -25,6 +25,10 @@ including full **power-cycle tests**.
 > 🖼 Prefer a designed page you can read in a browser? Open
 > **[`docs/browser-manual.html`](docs/browser-manual.html)** — one self-contained file (fonts
 > embedded, works offline), with three diagrams. Source lives in `docs/manual-src/`.
+>
+> 🚚 Sub gateway instead? **[`docs/browser-manual-sub.html`](docs/browser-manual-sub.html)**
+> covers Part A (Fleet agent, no token) and Part B (the sub's own tunnel) — same style,
+> three more diagrams.
 
 ---
 
@@ -342,6 +346,7 @@ These were all tested and do not work on this firmware:
 ├── docs/
 │   ├── manual-deployment.zh-HK.md  full step-by-step manual (raw curl, checkpoints, dead ends)
 │   ├── browser-manual.html         the same manual as a self-contained designed page
+│   ├── browser-manual-sub.html     the sub-gateway manual (Part A / Part B), same style
 │   └── manual-src/                 markdown + inline SVG sources + build scripts
 ├── ug65-cloudflared/
 │   ├── SKILL.md                  full skill instructions (Chinese, with all field notes)

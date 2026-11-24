@@ -1,0 +1,54 @@
+<svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Part A 同 Part B 嘅分別：Part A 做 Fleet agent 唔要 token，Part B 子機自己一條 tunnel 要自己嘅 token">
+  <style>
+    .hl { fill: currentColor; font-size: 18px; font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .sm { fill: currentColor; font-size: 12px; opacity: .62; }
+    .box { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }
+    .boxa { fill: none; stroke: var(--accent); stroke-width: 2; }
+    .no { fill: currentColor; font-size: 14px; opacity: .55; }
+    .yes { fill: var(--accent); font-size: 14px; font-weight: 700; }
+    .acc { fill: var(--accent); }
+    .tag { fill: currentColor; font-size: 11px; opacity: .55; }
+    .wire { stroke: currentColor; stroke-width: 1.4; fill: none; opacity: .45; }
+  </style>
+  <defs>
+    <marker id="ab-cur" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <text class="sm" x="24" y="26">先問清楚「你想做到咩」，再決定做 A、做 B，定兩樣都做。</text>
+
+  <!-- 起點 -->
+  <rect class="box" x="24" y="46" width="216" height="56" rx="3"/>
+  <text class="mono" x="38" y="70">你想子機做咩？</text>
+  <text class="sm" x="38" y="88">（可以兩樣都要）</text>
+
+  <!-- 分支線 -->
+  <line class="wire" x1="132" y1="102" x2="132" y2="130"/>
+  <line class="wire" x1="132" y1="130" x2="500" y2="130"/>
+  <line class="wire" x1="132" y1="130" x2="132" y2="158" marker-end="url(#ab-cur)"/>
+  <line class="wire" x1="500" y1="130" x2="500" y2="158" marker-end="url(#ab-cur)"/>
+
+  <!-- Part A -->
+  <rect class="box" x="24" y="158" width="292" height="128" rx="3"/>
+  <text class="hl" x="40" y="186">Part A</text>
+  <text class="sm" x="40" y="206">LoRa 封包要上到主機（Gateway Fleet）</text>
+  <text class="mono" x="40" y="232">cloudflared access tcp</text>
+  <text class="sm" x="40" y="254">子機冇自己 hostname，借用主機嗰個</text>
+  <text class="no" x="40" y="276">Token：✗ 唔要</text>
+
+  <!-- Part B -->
+  <rect class="box" x="404" y="158" width="292" height="128" rx="3"/>
+  <text class="hl" x="420" y="186">Part B</text>
+  <text class="sm" x="420" y="206">要由互聯網直接開子機自己</text>
+  <text class="mono" x="420" y="232">cloudflared tunnel run</text>
+  <text class="sm" x="420" y="254">子機自己一條 tunnel + 自己 hostname</text>
+  <text class="yes" x="420" y="276">Token：✓ 要（子機自己嗰條）</text>
+
+  <!-- 並存 -->
+  <rect class="boxa" x="24" y="300" width="672" height="32" rx="2"/>
+  <text class="mono acc" x="40" y="321">兩樣一齊要？可以 —— 同一部機兩個 cloudflared 進程，實測並存冇衝突。</text>
+
+  <text class="tag" x="24" y="348">純粹為咗 Fleet 就唔需要做 B；做 B 之前一定要問用戶攞子機自己嘅 token，唔可以抄主機。</text>
+</svg>

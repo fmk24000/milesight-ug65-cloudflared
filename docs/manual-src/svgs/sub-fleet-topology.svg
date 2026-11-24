@@ -1,0 +1,76 @@
+<svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fleet 資料流：子機 packet forwarder 經 cloudflared access tcp 連主機 hostname，由主機 tunnel 送到本機 mosquitto">
+  <style>
+    .hl { fill: currentColor; font-size: 18px; font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .sm { fill: currentColor; font-size: 12px; opacity: .62; }
+    .box { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }
+    .chip { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }
+    .wire { stroke: currentColor; stroke-width: 1.6; fill: none; opacity: .6; }
+    .wira { stroke: var(--accent); stroke-width: 2.2; fill: none; }
+    .dasha { stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-dasharray: 6 5; }
+    .acc { fill: var(--accent); }
+    .num { fill: var(--accent); font-size: 13px; font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="f-cur" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+    <marker id="f-acc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" style="fill: var(--accent)"/>
+    </marker>
+  </defs>
+
+  <!-- 子機 -->
+  <rect class="box" x="24" y="96" width="296" height="196" rx="3"/>
+  <text class="hl" x="42" y="126">子機（Remote site）</text>
+  <text class="sm" x="42" y="144">SIM 卡 · 冇固定 IP</text>
+
+  <rect class="chip" x="42" y="160" width="260" height="24" rx="2"/>
+  <text class="mono" x="52" y="177">packet forwarder</text>
+
+  <rect class="chip" x="42" y="190" width="260" height="24" rx="2"/>
+  <text class="mono" x="52" y="207">lo: 10.99.99.1/32</text>
+
+  <rect x="42" y="220" width="260" height="30" rx="2" style="fill:none; stroke: var(--accent); stroke-width: 1.6"/>
+  <text class="mono acc" x="52" y="240">cloudflared access tcp</text>
+
+  <text class="sm" x="42" y="272">client 代理，唔係 connector</text>
+
+  <!-- Cloudflare -->
+  <rect class="box" x="396" y="120" width="152" height="148" rx="3"/>
+  <text class="hl" x="410" y="148">Cloudflare</text>
+  <text class="sm" x="410" y="166">Edge</text>
+  <text class="mono acc" x="410" y="192">mqtt-xxx</text>
+  <text class="mono acc" x="410" y="208">.example.com</text>
+  <text class="sm" x="410" y="230">tcp://localhost</text>
+  <text class="sm" x="410" y="246">:18883</text>
+
+  <!-- 主機 -->
+  <rect class="box" x="584" y="96" width="112" height="196" rx="3"/>
+  <text class="hl" x="596" y="126">主機</text>
+  <text class="sm" x="596" y="144">controller</text>
+  <rect class="chip" x="596" y="160" width="88" height="42" rx="2"/>
+  <text class="mono" x="602" y="177">tunnel</text>
+  <text class="mono" x="602" y="193">run</text>
+  <rect class="chip" x="596" y="212" width="88" height="42" rx="2"/>
+  <text class="mono" x="602" y="229">mosq</text>
+  <text class="mono" x="602" y="245">18883</text>
+  <text class="sm" x="596" y="276">mTLS</text>
+
+  <!-- ① 子機 → edge -->
+  <line class="wira" x1="320" y1="200" x2="388" y2="188" marker-end="url(#f-acc)"/>
+  <text class="num" x="326" y="184">①</text>
+
+  <!-- ② edge → 主機 tunnel -->
+  <line class="wira" x1="548" y1="180" x2="576" y2="176" marker-end="url(#f-acc)"/>
+  <text class="num" x="554" y="164">②</text>
+
+  <!-- ③ 主機 tunnel → mosquitto -->
+  <line class="wire" x1="640" y1="202" x2="640" y2="212" marker-end="url(#f-cur)"/>
+  <text class="num" x="646" y="210">③</text>
+
+  <!-- 圖例 -->
+  <text class="sm" x="24" y="330">① 子機主動連出去（行 SIM / cellular），所以唔需要 inbound port forwarding</text>
+  <text class="sm" x="24" y="350">② 主機條 tunnel 接住同一個 hostname　③ 主機 mosquitto :18883 用 mTLS 驗證子機</text>
+  <text class="sm acc" x="24" y="374">重點：子機冇自己嘅 hostname，佢只係借用主機嘅 hostname 出街。</text>
+</svg>
