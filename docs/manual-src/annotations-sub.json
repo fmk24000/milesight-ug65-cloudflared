@@ -48,7 +48,7 @@
   },
   {
    "type": "embed",
-   "line": 74,
+   "line": 80,
    "label": "圖 3 · Fleet 資料流",
    "svg": "<svg viewBox=\"0 0 720 400\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"Fleet 資料流：子機 packet forwarder 經 cloudflared access tcp 連主機 hostname，由主機 tunnel 送到本機 mosquitto\">\n  <style>\n    .hl { fill: currentColor; font-size: 18px; font-weight: 600; }\n    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }\n    .sm { fill: currentColor; font-size: 12px; opacity: .62; }\n    .box { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }\n    .chip { fill: var(--paper-2); stroke: var(--line); stroke-width: 1.2; }\n    .wire { stroke: currentColor; stroke-width: 1.6; fill: none; opacity: .6; }\n    .wira { stroke: var(--accent); stroke-width: 2.2; fill: none; }\n    .dasha { stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-dasharray: 6 5; }\n    .acc { fill: var(--accent); }\n    .num { fill: var(--accent); font-size: 13px; font-weight: 700; }\n  </style>\n  <defs>\n    <marker id=\"f-cur\" viewBox=\"0 0 10 10\" refX=\"8.5\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\">\n      <path d=\"M0 0 L10 5 L0 10 z\" fill=\"currentColor\"/>\n    </marker>\n    <marker id=\"f-acc\" viewBox=\"0 0 10 10\" refX=\"8.5\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\">\n      <path d=\"M0 0 L10 5 L0 10 z\" style=\"fill: var(--accent)\"/>\n    </marker>\n  </defs>\n\n  <!-- 子機 -->\n  <rect class=\"box\" x=\"24\" y=\"96\" width=\"296\" height=\"196\" rx=\"3\"/>\n  <text class=\"hl\" x=\"42\" y=\"126\">子機（Remote site）</text>\n  <text class=\"sm\" x=\"42\" y=\"144\">SIM 卡 · 冇固定 IP</text>\n\n  <rect class=\"chip\" x=\"42\" y=\"160\" width=\"260\" height=\"24\" rx=\"2\"/>\n  <text class=\"mono\" x=\"52\" y=\"177\">packet forwarder</text>\n\n  <rect class=\"chip\" x=\"42\" y=\"190\" width=\"260\" height=\"24\" rx=\"2\"/>\n  <text class=\"mono\" x=\"52\" y=\"207\">lo: 10.99.99.1/32</text>\n\n  <rect x=\"42\" y=\"220\" width=\"260\" height=\"30\" rx=\"2\" style=\"fill:none; stroke: var(--accent); stroke-width: 1.6\"/>\n  <text class=\"mono acc\" x=\"52\" y=\"240\">cloudflared access tcp</text>\n\n  <text class=\"sm\" x=\"42\" y=\"272\">client 代理，唔係 connector</text>\n\n  <!-- Cloudflare -->\n  <rect class=\"box\" x=\"396\" y=\"120\" width=\"152\" height=\"148\" rx=\"3\"/>\n  <text class=\"hl\" x=\"410\" y=\"148\">Cloudflare</text>\n  <text class=\"sm\" x=\"410\" y=\"166\">Edge</text>\n  <text class=\"mono acc\" x=\"410\" y=\"192\">mqtt-xxx</text>\n  <text class=\"mono acc\" x=\"410\" y=\"208\">.example.com</text>\n  <text class=\"sm\" x=\"410\" y=\"230\">tcp://localhost</text>\n  <text class=\"sm\" x=\"410\" y=\"246\">:18883</text>\n\n  <!-- 主機 -->\n  <rect class=\"box\" x=\"584\" y=\"96\" width=\"112\" height=\"196\" rx=\"3\"/>\n  <text class=\"hl\" x=\"596\" y=\"126\">主機</text>\n  <text class=\"sm\" x=\"596\" y=\"144\">controller</text>\n  <rect class=\"chip\" x=\"596\" y=\"160\" width=\"88\" height=\"42\" rx=\"2\"/>\n  <text class=\"mono\" x=\"602\" y=\"177\">tunnel</text>\n  <text class=\"mono\" x=\"602\" y=\"193\">run</text>\n  <rect class=\"chip\" x=\"596\" y=\"212\" width=\"88\" height=\"42\" rx=\"2\"/>\n  <text class=\"mono\" x=\"602\" y=\"229\">mosq</text>\n  <text class=\"mono\" x=\"602\" y=\"245\">18883</text>\n  <text class=\"sm\" x=\"596\" y=\"276\">mTLS</text>\n\n  <!-- ① 子機 → edge -->\n  <line class=\"wira\" x1=\"320\" y1=\"200\" x2=\"388\" y2=\"188\" marker-end=\"url(#f-acc)\"/>\n  <text class=\"num\" x=\"326\" y=\"184\">①</text>\n\n  <!-- ② edge → 主機 tunnel -->\n  <line class=\"wira\" x1=\"548\" y1=\"180\" x2=\"576\" y2=\"176\" marker-end=\"url(#f-acc)\"/>\n  <text class=\"num\" x=\"554\" y=\"164\">②</text>\n\n  <!-- ③ 主機 tunnel → mosquitto -->\n  <line class=\"wire\" x1=\"640\" y1=\"202\" x2=\"640\" y2=\"212\" marker-end=\"url(#f-cur)\"/>\n  <text class=\"num\" x=\"646\" y=\"210\">③</text>\n\n  <!-- 圖例 -->\n  <text class=\"sm\" x=\"24\" y=\"330\">① 子機主動連出去（行 SIM / cellular），所以唔需要 inbound port forwarding</text>\n  <text class=\"sm\" x=\"24\" y=\"350\">② 主機條 tunnel 接住同一個 hostname　③ 主機 mosquitto :18883 用 mTLS 驗證子機</text>\n  <text class=\"sm acc\" x=\"24\" y=\"374\">重點：子機冇自己嘅 hostname，佢只係借用主機嘅 hostname 出街。</text>\n</svg>",
    "caption": "子機主動連出去，借主機嘅 hostname 出街；主機 tunnel 接住再送落本機 mosquitto。"
@@ -56,13 +56,13 @@
   {
    "type": "process",
    "lines": [
-    103,
-    104,
-    105,
-    106,
-    107,
-    108,
-    109
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115
    ],
    "items": [
     {
@@ -97,24 +97,24 @@
   },
   {
    "type": "aside",
-   "line": 146,
+   "line": 152,
    "title": "唔好只睇 domain 返 200",
    "text": "有舊安裝嘅機，外網 200 唔代表今次部署成功。一定要睇 destination 嘅 connected、子機 toml 嘅 server=，同主機 Fleet 嘅 lastSeen 有冇更新。"
   },
   {
    "type": "highlight",
-   "line": 184,
+   "line": 190,
    "label": "記住"
   },
   {
    "type": "aside",
-   "line": 198,
+   "line": 204,
    "title": "先驗 token，再碰機",
    "text": "新 token 一到，先跑 --check-token。佢唔會連任何 gateway，純粹驗格式同撞唔撞主機，錯就 exit 2，唔會改到部機。"
   },
   {
    "type": "summary-card",
-   "line": 255,
+   "line": 261,
    "label": "三十秒自我檢查",
    "items": [
     {
@@ -146,13 +146,13 @@
   {
    "type": "checklist",
    "lines": [
-    305,
-    306,
-    307,
-    308,
-    309,
-    310,
-    311
+    311,
+    312,
+    313,
+    314,
+    315,
+    316,
+    317
    ]
   }
  ]

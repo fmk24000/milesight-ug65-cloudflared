@@ -61,10 +61,16 @@ cloudflared 只綁 `10.99.99.1:28883`（**唔綁 `0.0.0.0`**），所以 LAN 上
 
 Zero Trust → Networks → Tunnels → 主機嗰條 tunnel → Public Hostname：
 
-| Hostname | Service |
-|---|---|
-| `mqtt-xxx.example.com` | **`tcp://localhost:18883`** |
-| （可選）`01-xxx.example.com` | `https://localhost:443`（No TLS Verify） |
+實測設定就係咁樣排（Cloudflare 而家叫 **Published application**，舊名先叫 Public Hostname）：
+
+| Order | Destination | Type | Service | Additional settings |
+|---|---|---|---|---|
+| 1 | `01-xxx.example.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
+| 2 | `mqtt-xxx.example.com` | Published application | `tcp://localhost:18883` | Using defaults |
+
+第 1 行係主機自己嘅 Web GUI（可選，方便你由外面開主機）；**第 2 行係子機要連嘅 MQTT route**，冇佢子機一定通唔到。
+
+兩行都掛喺同一條主機 tunnel，所以主機 token 只需要一個 —— 同子機自己嘅 token 係兩件事。
 
 兩個硬性限制：
 

@@ -83,31 +83,31 @@
   },
   {
    "type": "aside",
-   "line": 204,
+   "line": 217,
    "title": "唔想用產生器？",
    "text": "可以唔用 make_flows.py，直接把附錄「完整安裝腳本」貼入 exec node 嘅 command，再自己砌 inject(once) → exec(oldrc:true) → debug 三個 node。效果完全一樣。"
   },
   {
    "type": "aside",
-   "line": 317,
+   "line": 330,
    "title": "唔好即刻開 domain",
    "text": "cloudflared 要 60–70 秒先完成註冊（排喺一堆 LoRaWAN 服務後面）。重開機後太早開，見到 502 係正常，唔係部署失敗。"
   },
   {
    "type": "embed",
-   "line": 407,
+   "line": 420,
    "label": "圖 3 · 開機時序實測",
    "svg": "<svg viewBox=\"0 0 720 300\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"開機時序：0 秒開機，START 19 至 96，71 秒通 443，107 秒通 22\">\n  <style>\n    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }\n    .sm { fill: currentColor; font-size: 12.5px; opacity: .62; }\n    .axis { stroke: currentColor; stroke-width: 1.6; opacity: .5; }\n    .tick { stroke: currentColor; stroke-width: 1.2; opacity: .38; }\n    .wira { stroke: var(--accent); stroke-width: 2.4; fill: none; }\n    .bar { fill: var(--paper-2); }\n    .acc { fill: var(--accent); }\n  </style>\n  <defs>\n    <marker id=\"t-acc\" viewBox=\"0 0 10 10\" refX=\"8.5\" refY=\"5\" markerWidth=\"5\" markerHeight=\"5\" orient=\"auto-start-reverse\">\n      <path d=\"M0 0 L10 5 L0 10 z\" style=\"fill: var(--accent)\"/>\n    </marker>\n  </defs>\n\n  <!-- axis 0..120s -> x 60..660 -->\n  <line class=\"axis\" x1=\"60\" y1=\"176\" x2=\"680\" y2=\"176\"/>\n\n  <!-- 註冊區間 60-70s -->\n  <rect class=\"bar\" x=\"358\" y=\"152\" width=\"52\" height=\"24\" rx=\"2\"/>\n  <text class=\"sm\" x=\"364\" y=\"169\">60–70s</text>\n\n  <!-- above ticks -->\n  <g>\n    <line class=\"tick\" x1=\"60\" y1=\"176\" x2=\"60\" y2=\"146\"/>\n    <text class=\"mono\" x=\"60\" y=\"140\" text-anchor=\"middle\">0s</text>\n\n    <line class=\"tick\" x1=\"157\" y1=\"176\" x2=\"157\" y2=\"146\"/>\n    <text class=\"mono\" x=\"157\" y=\"140\" text-anchor=\"middle\">19</text>\n\n    <line class=\"tick\" x1=\"240\" y1=\"176\" x2=\"240\" y2=\"146\"/>\n    <text class=\"mono\" x=\"240\" y=\"140\" text-anchor=\"middle\">82</text>\n\n    <line class=\"tick\" x1=\"312\" y1=\"176\" x2=\"312\" y2=\"146\"/>\n    <text class=\"mono\" x=\"312\" y=\"140\" text-anchor=\"middle\">95</text>\n\n    <line class=\"tick\" x1=\"332\" y1=\"176\" x2=\"332\" y2=\"146\"/>\n    <text class=\"mono\" x=\"332\" y=\"140\" text-anchor=\"middle\">96</text>\n  </g>\n\n  <!-- milestones -->\n  <line class=\"wira\" x1=\"60\" y1=\"176\" x2=\"412\" y2=\"176\" marker-end=\"url(#t-acc)\"/>\n  <line class=\"tick\" x1=\"415\" y1=\"152\" x2=\"415\" y2=\"198\"/>\n  <text class=\"mono acc\" x=\"415\" y=\"124\" text-anchor=\"middle\">71s</text>\n  <text class=\"sm\" x=\"415\" y=\"108\" text-anchor=\"middle\">443 通</text>\n\n  <line class=\"wira\" x1=\"415\" y1=\"176\" x2=\"596\" y2=\"176\" marker-end=\"url(#t-acc)\"/>\n  <line class=\"tick\" x1=\"595\" y1=\"152\" x2=\"595\" y2=\"198\"/>\n  <text class=\"mono acc\" x=\"595\" y=\"124\" text-anchor=\"middle\">107s</text>\n  <text class=\"sm\" x=\"595\" y=\"108\" text-anchor=\"middle\">22 通</text>\n\n  <!-- 圖例 -->\n  <text class=\"sm\" x=\"60\" y=\"226\">橫軸上面嘅數字係 procd 嘅 START：19 firewall　82 node-red　95 cloudflared　96 keepalive。</text>\n  <text class=\"sm\" x=\"60\" y=\"248\">60–70 秒之間 cloudflared 完成註冊；早過呢個時間開 domain 見到 502 係正常。</text>\n  <text class=\"sm\" x=\"60\" y=\"270\">重試幾次先成功係正常 —— log 有多次 Starting tunnel 唔代表設定錯。</text>\n</svg>",
    "caption": "同一隻正值係 71 秒通 443、107 秒通 22；cloudflared 期間重試幾次先註冊成功係正常。"
   },
   {
    "type": "highlight",
-   "line": 472,
+   "line": 485,
    "label": "記住"
   },
   {
    "type": "summary-card",
-   "line": 414,
+   "line": 427,
    "label": "三十秒自我檢查",
    "items": [
     {
@@ -139,15 +139,15 @@
   {
    "type": "checklist",
    "lines": [
-    657,
-    658,
-    659,
-    660,
-    661,
-    662,
-    663,
-    664,
-    665
+    670,
+    671,
+    672,
+    673,
+    674,
+    675,
+    676,
+    677,
+    678
    ]
   }
  ]

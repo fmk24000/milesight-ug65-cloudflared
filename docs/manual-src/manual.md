@@ -83,6 +83,19 @@ status: verified
 
 填完個 hostname 就係 `https://gw.example.com`。
 
+### 實測範例：一條 tunnel 掛兩個 hostname
+
+同一條 tunnel 可以掛多個 route（Cloudflare 而家叫 **Published application**，舊名先叫 Public Hostname）。實測就係咁樣排：
+
+| Order | Destination | Type | Service | Additional settings |
+|---|---|---|---|---|
+| 1 | `01-xxx.example.com` | Published application | `https://localhost:443` | 1 customized（= No TLS Verify） |
+| 2 | `mqtt-xxx.example.com` | Published application | `tcp://localhost:18883` | Using defaults |
+
+第 1 行係 gateway 自己嘅 Web GUI；第 2 行係子機 MQTT 上行用（見子機那份 manual）。**MQTT 一定要 `tcp://`**，寫 `http://localhost:18883` 會回 502。
+
+兩行都係同一條 tunnel、同一個 token —— 所以主機側只需要裝一次。
+
 第 5 步嘅 Access policy 咁設：Zero Trust → **Access → Applications → Add an application → Self-hosted**。Application domain 填 `gw.example.com`；Policy 揀 Action `Allow`、Include `Emails`、填你自己 email；Identity provider 用 **One-time PIN**（最快）或者 Google。
 
 > ⚠️ 唔加 Access policy 嘅話，你部 gateway 嘅管理介面就等於對全世界開放。實測冇加，`https://gw.example.com` 會直接返回 UG65 登入頁。
